@@ -22,10 +22,6 @@ class MyApp extends StatelessWidget {
             color: Colors.blue,
             surfaceTintColor: Colors.white,
             foregroundColor: Colors.white),
-        tabBarTheme: const TabBarTheme(
-            dividerColor: Colors.white,
-            labelColor: Colors.white,
-            indicatorColor: Colors.white),
       ),
       builder: FToastBuilder(),
       home: const HomeScreen(),
