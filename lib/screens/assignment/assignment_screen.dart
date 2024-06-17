@@ -40,6 +40,7 @@ class _AssignmentScreenState extends State<AssignmentScreen>
   void _startListening() async {
     await _speechToText.listen(
       onResult: _onSpeechResult,
+      localeId: 'en'
     );
     setState(() {});
   }
