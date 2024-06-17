@@ -51,6 +51,7 @@ class _AssignmentScreenState extends State<AssignmentScreen>
   /// listen method.
   void _stopListening(BuildContext context) async {
     await _speechToText.stop();
+    await Future.delayed(const Duration(milliseconds: 100));
     if (context.mounted) {
       _onSubmit(context, clearText: false);
     }
@@ -61,10 +62,11 @@ class _AssignmentScreenState extends State<AssignmentScreen>
   /// This is the callback that the SpeechToText plugin calls when
   /// the platform returns recognized words.
   void _onSpeechResult(SpeechRecognitionResult result) {
-    setState(() {
       _lastWords = result.recognizedWords;
-      textController.text = _lastWords;
-    });
+      print(_lastWords);
+      if(_speechToText.isListening){
+        textController.text = _lastWords;
+      }
   }
 
   bool _onKey(KeyEvent event) {
@@ -174,7 +176,7 @@ class _AssignmentScreenState extends State<AssignmentScreen>
                 return Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text("Micro Mode"),
+                    const Icon(Icons.mic,color: Colors.white,),
                     Switch(
                         value: useMic,
                         onChanged: (isUsingMicro) {
@@ -265,19 +267,23 @@ class _AssignmentScreenState extends State<AssignmentScreen>
                               }),
                         ),
                       ),
+                      const SizedBox(height: 12,),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           ElevatedButton(
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                               onPressed: () {
                                 _showAnswer(context);
                               },
-                              child: const Text("Show answer")),
+                              child: const Text("Show answer",style: TextStyle(color: Colors.white),)),
+                          const SizedBox(width: 12,),
                           ElevatedButton(
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                               onPressed: () {
                                 _onSubmit(context);
                               },
-                              child: const Text("Submit")),
+                              child: const Text("Submit",style: TextStyle(color: Colors.white),)),
                         ],
                       )
                     ],
@@ -305,7 +311,8 @@ class _AssignmentScreenState extends State<AssignmentScreen>
     node.unfocus();
   }
 
-  void _next() {
+  Future<void> _next() async {
+    await Future.delayed(const Duration(milliseconds: 100));
     setState(() {
       wordCounter++;
       wordsAssignment.removeAt(0);
