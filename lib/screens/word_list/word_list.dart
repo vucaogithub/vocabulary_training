@@ -9,8 +9,9 @@ import 'package:vocabulary_training/models/word_item_model.dart';
 import 'package:vocabulary_training/screens/assignment/assignment_screen.dart';
 import 'package:vocabulary_training/screens/home/bloc/vocabulary/vocabulary_cubit.dart';
 import 'package:collection/collection.dart';
-import '../bloc/favourite/favourite_cubit.dart';
-import 'card_shrimer.dart';
+import 'package:vocabulary_training/screens/stt/speech_to_text.dart';
+import '../home/bloc/favourite/favourite_cubit.dart';
+import '../../widgets/card_shrimer.dart';
 
 class WordList extends StatefulWidget {
   final List<WordItemModel> list;
@@ -114,46 +115,51 @@ class _WordListState extends State<WordList> {
                 itemCount: widget.list.length,
                 itemBuilder: (context, index) {
                   final item = widget.list.elementAt(index);
-                  return Card(
-                    child: ListTile(
-                      title: Text(item.english ?? ''),
-                      subtitle: Text(item.meaning.toString()),
-                      leading: BlocBuilder<FavouriteCubit, FavouriteState>(
-                        builder: (context, state) {
-                          if (state is FavouriteLoading) {
-                            return const CircularProgressIndicator();
-                          } else if (state is FavouriteSuccess) {
-                            if (oldList.isEmpty) {
-                              oldList.addAll(List.from(state.favourites));
+                  return GestureDetector(
+                    onTap: (){
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => SpeechToTextScreen(word: '${item.english}',)));
+                    },
+                    child: Card(
+                      child: ListTile(
+                        title: Text(item.english ?? ''),
+                        subtitle: Text(item.meaning.toString()),
+                        leading: BlocBuilder<FavouriteCubit, FavouriteState>(
+                          builder: (context, state) {
+                            if (state is FavouriteLoading) {
+                              return const CircularProgressIndicator();
+                            } else if (state is FavouriteSuccess) {
+                              if (oldList.isEmpty) {
+                                oldList.addAll(List.from(state.favourites));
+                              }
+                              if (oldList.isNotEmpty) {
+                                final isEnable = !eq(
+                                    oldList.map((e) => e.id).toSet(),
+                                    state.favourites.map((e) => e.id).toSet());
+                                enableSubmit.sink.add(isEnable);
+                              }
+                              final isFavourite = state.favourites
+                                  .map((element) => element.id)
+                                  .toSet()
+                                  .toList()
+                                  .contains(item.id);
+                              return Checkbox(
+                                  value: isFavourite,
+                                  onChanged: (isChecked) {
+                                    if (isChecked != true) {
+                                      state.favourites.removeWhere(
+                                          (test) => test.id == item.id);
+                                    } else {
+                                      state.favourites.add(Favourite(
+                                          id: item.id, word: item.english));
+                                    }
+                                    context
+                                        .read<FavouriteCubit>()
+                                        .updateFavouritesList(state.favourites);
+                                  });
                             }
-                            if (oldList.isNotEmpty) {
-                              final isEnable = !eq(
-                                  oldList.map((e) => e.id).toSet(),
-                                  state.favourites.map((e) => e.id).toSet());
-                              enableSubmit.sink.add(isEnable);
-                            }
-                            final isFavourite = state.favourites
-                                .map((element) => element.id)
-                                .toSet()
-                                .toList()
-                                .contains(item.id);
-                            return Checkbox(
-                                value: isFavourite,
-                                onChanged: (isChecked) {
-                                  if (isChecked != true) {
-                                    state.favourites.removeWhere(
-                                        (test) => test.id == item.id);
-                                  } else {
-                                    state.favourites.add(Favourite(
-                                        id: item.id, word: item.english));
-                                  }
-                                  context
-                                      .read<FavouriteCubit>()
-                                      .updateFavouritesList(state.favourites);
-                                });
-                          }
-                          return const Icon(Icons.info);
-                        },
+                            return const Icon(Icons.info);
+                          },
+                        ),
                       ),
                     ),
                   );

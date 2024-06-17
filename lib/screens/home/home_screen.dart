@@ -10,6 +10,7 @@ import 'package:vocabulary_training/screens/home/bloc/favourite/favourite_cubit.
 import 'package:vocabulary_training/screens/home/bloc/vocabulary/vocabulary_cubit.dart';
 import 'package:vocabulary_training/screens/home/widgets/main_content.dart';
 import 'package:vocabulary_training/screens/home/widgets/submit_bottom.dart';
+import 'package:vocabulary_training/screens/stt/speech_to_text.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

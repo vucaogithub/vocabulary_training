@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vocabulary_training/screens/home/bloc/vocabulary/vocabulary_cubit.dart';
 
-import 'card_shrimer.dart';
+import '../../../widgets/card_shrimer.dart';
 
 class TopicList extends StatelessWidget {
   final List<String?> topics;
