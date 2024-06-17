@@ -312,6 +312,7 @@ class _AssignmentScreenState extends State<AssignmentScreen>
       wordsAssignment.shuffle();
       showAnswer.value = false;
       showAnimation.value = false;
+      textController.clear();
     });
   }
 
