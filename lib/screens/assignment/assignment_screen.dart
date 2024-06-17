@@ -1,3 +1,4 @@
+import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
@@ -23,6 +24,7 @@ class _AssignmentScreenState extends State<AssignmentScreen>
   final showAnswer = ValueNotifier(false);
   final isUSingMicro = ValueNotifier(false);
   final showAnimation = ValueNotifier(false);
+  final isListening = ValueNotifier(false);
   final SpeechToText _speechToText = SpeechToText();
   bool _speechEnabled = false;
   String _lastWords = '';
@@ -38,10 +40,8 @@ class _AssignmentScreenState extends State<AssignmentScreen>
 
   /// Each time to start a speech recognition session
   void _startListening() async {
-    await _speechToText.listen(
-      onResult: _onSpeechResult,
-      localeId: 'en'
-    );
+    await _speechToText.listen(onResult: _onSpeechResult, localeId: 'en');
+    isListening.value = true;
     setState(() {});
   }
 
@@ -54,6 +54,7 @@ class _AssignmentScreenState extends State<AssignmentScreen>
     if (context.mounted) {
       _onSubmit(context, clearText: false);
     }
+    isListening.value = false;
     setState(() {});
   }
 
@@ -63,11 +64,6 @@ class _AssignmentScreenState extends State<AssignmentScreen>
     setState(() {
       _lastWords = result.recognizedWords;
       textController.text = _lastWords;
-      // if(_lastWords == widget.word){
-      //   isCorrect.value = true;
-      // }else{
-      //   isCorrect.value = false;
-      // }
     });
   }
 
@@ -114,7 +110,7 @@ class _AssignmentScreenState extends State<AssignmentScreen>
     _initSpeech();
     ServicesBinding.instance.keyboard.addHandler(_onKey);
     _controller =
-        AnimationController(vsync: this, duration: const Duration(seconds: 2));
+        AnimationController(vsync: this, duration: const Duration(seconds: 1));
   }
 
   @override
@@ -128,6 +124,7 @@ class _AssignmentScreenState extends State<AssignmentScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: ValueListenableBuilder(
         valueListenable: isUSingMicro,
         builder: (context, useMic, child) {
@@ -139,7 +136,30 @@ class _AssignmentScreenState extends State<AssignmentScreen>
                 onTapUp: (detail) {
                   _stopListening(context);
                 },
-                child: const Icon(Icons.mic_rounded));
+                child: ValueListenableBuilder(
+                  valueListenable: isListening,
+                  builder: (context,isListening,child) {
+                    return AvatarGlow(
+                      startDelay: const Duration(milliseconds: 1000),
+                      glowColor: Colors.blue,
+                      glowShape: BoxShape.circle,
+                      animate: _speechToText.isListening,
+                      repeat: isListening,
+                      child: const Material(
+                        elevation: 8.0,
+                        shape: CircleBorder(),
+                        color: Colors.blue,
+                        child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Icon(
+                            Icons.mic_rounded,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                ));
           }
           return const SizedBox();
         },
@@ -173,13 +193,14 @@ class _AssignmentScreenState extends State<AssignmentScreen>
                 valueListenable: showAnimation,
                 builder: (context, isShowAnimation, child) {
                   final fistItem = wordsAssignment.firstOrNull;
-                  if(isShowAnimation){
+                  if (isShowAnimation) {
                     _controller.reset();
                     return Lottie.asset(
                       'assets/lottie_animation/mark_done.json',
-                      controller: _controller..forward().whenComplete((){
-                        _next();
-                      }),
+                      controller: _controller
+                        ..forward().whenComplete(() {
+                          _next();
+                        }),
                       onLoaded: (composition) {},
                     );
                   }
