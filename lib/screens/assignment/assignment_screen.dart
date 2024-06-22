@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,6 +6,12 @@ import 'package:lottie/lottie.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:vocabulary_training/models/word_item_model.dart';
+import 'package:vocabulary_training/screens/assignment/widgets/correct_animation_widget.dart';
+import 'package:vocabulary_training/screens/assignment/widgets/micro_widget.dart';
+import 'package:vocabulary_training/widgets/lottie_builder.dart';
+
+import 'widgets/assignment_app_bar.dart';
+import 'widgets/assignment_complete.dart';
 
 class AssignmentScreen extends StatefulWidget {
   final List<WordItemModel> words;
@@ -15,70 +22,42 @@ class AssignmentScreen extends StatefulWidget {
   State<AssignmentScreen> createState() => _AssignmentScreenState();
 }
 
-class _AssignmentScreenState extends State<AssignmentScreen>
-    with TickerProviderStateMixin {
+class _AssignmentScreenState extends State<AssignmentScreen> {
   late final wordsAssignment = List<WordItemModel>.from(widget.words);
   final FocusNode node = FocusNode();
-  final textController = TextEditingController();
+  final _textController = TextEditingController();
   final formKey = GlobalKey<FormState>();
   final showAnswer = ValueNotifier(false);
   final isUSingMicro = ValueNotifier(false);
-  final showAnimation = ValueNotifier(false);
-  final isListening = ValueNotifier(false);
+  final answerCorrect = ValueNotifier(false);
   final SpeechToText _speechToText = SpeechToText();
-  bool _speechEnabled = false;
-  String _lastWords = '';
-  late final AnimationController _controller;
 
   int wordCounter = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    _initSpeech();
+    wordsAssignment.shuffle();
+    ServicesBinding.instance.keyboard.addHandler(_onKey);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _speechToText.cancel();
+    ServicesBinding.instance.keyboard.addHandler(_onKey);
+  }
   /// This has to happen only once per app
   void _initSpeech() async {
-    _speechEnabled = await _speechToText.initialize();
+    await _speechToText.initialize();
     setState(() {});
-  }
-
-  /// Each time to start a speech recognition session
-  void _startListening() async {
-    await _speechToText.listen(onResult: _onSpeechResult, localeId: 'en');
-    isListening.value = true;
-    setState(() {});
-  }
-
-  /// Manually stop the active speech recognition session
-  /// Note that there are also timeouts that each platform enforces
-  /// and the SpeechToText plugin supports setting timeouts on the
-  /// listen method.
-  void _stopListening(BuildContext context) async {
-    await _speechToText.stop();
-    await Future.delayed(const Duration(milliseconds: 100));
-    if (context.mounted) {
-      _onSubmit(context, clearText: false);
-    }
-    isListening.value = false;
-    setState(() {});
-  }
-
-  /// This is the callback that the SpeechToText plugin calls when
-  /// the platform returns recognized words.
-  void _onSpeechResult(SpeechRecognitionResult result) {
-      _lastWords = result.recognizedWords;
-      print(_lastWords);
-      if(_speechToText.isListening){
-        textController.text = _lastWords;
-      }
   }
 
   bool _onKey(KeyEvent event) {
     final key = event.logicalKey.keyLabel;
-    final isSpacePressing = key == LogicalKeyboardKey.space.keyLabel;
-
     if (event is KeyDownEvent) {
-      if (isUSingMicro.value) {
-        if (isSpacePressing) {
-          _startListening();
-        }
-      } else {
+      if(isUSingMicro.value != true){
         if (!node.hasFocus) {
           FocusScope.of(context).requestFocus(node);
         }
@@ -87,40 +66,18 @@ class _AssignmentScreenState extends State<AssignmentScreen>
         } else if (key == LogicalKeyboardKey.enter.keyLabel) {
           final fistItem = wordsAssignment.firstOrNull;
           if (fistItem == null && wordCounter > 0) {
-            reset();
+            _reset();
           }
         }
       }
-    } else if (event is KeyUpEvent) {
-      if (isUSingMicro.value) {
-        if (isSpacePressing) {
-          _stopListening(context);
-        }
-      }
     } else if (event is KeyRepeatEvent) {
-      if (key == LogicalKeyboardKey.enter.keyLabel) {
-        node.unfocus();
+      if(isUSingMicro.value != true){
+        if (key == LogicalKeyboardKey.enter.keyLabel) {
+          node.unfocus();
+        }
       }
     }
     return false;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    wordsAssignment.shuffle();
-    _initSpeech();
-    ServicesBinding.instance.keyboard.addHandler(_onKey);
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(seconds: 1));
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    ServicesBinding.instance.keyboard.addHandler(_onKey);
-    _speechToText.cancel();
-    _controller.dispose();
   }
 
   @override
@@ -130,93 +87,42 @@ class _AssignmentScreenState extends State<AssignmentScreen>
       floatingActionButton: ValueListenableBuilder(
         valueListenable: isUSingMicro,
         builder: (context, useMic, child) {
-          if (useMic) {
-            return GestureDetector(
-                onTapDown: (detail) {
-                  _startListening();
-                },
-                onTapUp: (detail) {
-                  _stopListening(context);
-                },
-                child: ValueListenableBuilder(
-                  valueListenable: isListening,
-                  builder: (context,isListening,child) {
-                    return AvatarGlow(
-                      startDelay: const Duration(milliseconds: 1000),
-                      glowColor: Colors.blue,
-                      glowShape: BoxShape.circle,
-                      animate: _speechToText.isListening,
-                      repeat: isListening,
-                      child: const Material(
-                        elevation: 8.0,
-                        shape: CircleBorder(),
-                        color: Colors.blue,
-                        child: Padding(
-                          padding: EdgeInsets.all(20),
-                          child: Icon(
-                            Icons.mic_rounded,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-                ));
+          final fistItem = wordsAssignment.firstOrNull;
+          final isCompleted = fistItem == null && wordCounter > 0;
+          if (useMic && !isCompleted) {
+            return MicroWidget(
+                answerCorrect: answerCorrect,
+                speechToText: _speechToText,
+                textController: _textController,
+                onStopListen: () {
+                  _onSubmit(context, clearText: false);
+                }, enableMic: useMic,);
           }
           return const SizedBox();
         },
       ),
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text("Assignment"),
-        actions: [
-          ValueListenableBuilder(
-              valueListenable: isUSingMicro,
-              builder: (context, useMic, child) {
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.mic,color: Colors.white,),
-                    Switch(
-                        value: useMic,
-                        onChanged: (isUsingMicro) {
-                          isUSingMicro.value = isUsingMicro;
-                        }),
-                  ],
-                );
-              })
-        ],
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kBottomNavigationBarHeight),
+        child: AssignmentAppBar(isUSingMicro: isUSingMicro),
       ),
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: ValueListenableBuilder(
-                valueListenable: showAnimation,
+                valueListenable: answerCorrect,
                 builder: (context, isShowAnimation, child) {
                   final fistItem = wordsAssignment.firstOrNull;
                   if (isShowAnimation) {
-                    _controller.reset();
-                    return Lottie.asset(
-                      'assets/lottie_animation/mark_done.json',
-                      controller: _controller
-                        ..forward().whenComplete(() {
-                          _next();
-                        }),
-                      onLoaded: (composition) {},
+                    return CorrectAnimationWidget(
+                      onAnimationComplete: _next,
                     );
                   }
-                  if (fistItem == null && wordCounter > 0) {
-                    return Column(
-                      children: [
-                        const Text("Done!"),
-                        const Text("Do you want to take assignment again"),
-                        ElevatedButton(
-                            onPressed: () {
-                              reset();
-                            },
-                            child: const Text("Try again"))
-                      ],
+                  final isCompleted = fistItem == null && wordCounter > 0;
+                  if (isCompleted) {
+                    return AssignmentComplete(
+                      wordCounter: wordCounter,
+                      onTryAgainPressed: _reset,
                     );
                   }
                   if (fistItem == null) {
@@ -224,14 +130,19 @@ class _AssignmentScreenState extends State<AssignmentScreen>
                   }
                   return Column(
                     children: [
-                      Text("Number of correct: $wordCounter"),
-                      Text("${fistItem.vietnamese}"),
+                      _buildScore(),
+                      SelectableText(
+                        "${fistItem.vietnamese}",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w500),
+                      ),
                       ValueListenableBuilder(
                           valueListenable: showAnswer,
                           builder: (context, isShowing, child) {
                             return Opacity(
                                 opacity: isShowing == true ? 1 : 0,
-                                child: Text("${fistItem.english}"));
+                                child: SelectableText("${fistItem.english}"));
                           }),
                       Container(
                         constraints: const BoxConstraints(maxWidth: 500),
@@ -244,19 +155,9 @@ class _AssignmentScreenState extends State<AssignmentScreen>
                                   focusNode: node,
                                   autofocus: true,
                                   readOnly: useMic,
-                                  controller: textController,
+                                  controller: _textController,
                                   validator: (input) {
-                                    if (input == null ||
-                                        input.isEmpty == true) {
-                                      return "Please type your answer!";
-                                    }
-                                    if (input.isNotEmpty == true) {
-                                      if (fistItem.english?.toLowerCase() !=
-                                          (input.toLowerCase().trim())) {
-                                        return "Incorrect!";
-                                      }
-                                    }
-                                    return null;
+                                    return _inputValidation(input, fistItem);
                                   },
                                   decoration: const InputDecoration(
                                       border: OutlineInputBorder()),
@@ -267,23 +168,25 @@ class _AssignmentScreenState extends State<AssignmentScreen>
                               }),
                         ),
                       ),
-                      const SizedBox(height: 12,),
+                      const SizedBox(
+                        height: 12,
+                      ),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                          _buildElevatedButton(
+                              title: "Show answer",
                               onPressed: () {
                                 _showAnswer(context);
-                              },
-                              child: const Text("Show answer",style: TextStyle(color: Colors.white),)),
-                          const SizedBox(width: 12,),
-                          ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                              }),
+                          const SizedBox(
+                            width: 12,
+                          ),
+                          _buildElevatedButton(
                               onPressed: () {
                                 _onSubmit(context);
                               },
-                              child: const Text("Submit",style: TextStyle(color: Colors.white),)),
+                              title: "Submit"),
                         ],
                       )
                     ],
@@ -295,6 +198,37 @@ class _AssignmentScreenState extends State<AssignmentScreen>
     );
   }
 
+  ElevatedButton _buildElevatedButton(
+      {Function()? onPressed, required String title}) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+      onPressed: onPressed,
+      child: Text(
+        title,
+        style: const TextStyle(color: Colors.white),
+      ),
+    );
+  }
+
+  String? _inputValidation(String? input, WordItemModel fistItem) {
+    if (input == null || input.isEmpty == true) {
+      return "Please type your answer!";
+    }
+    if (input.isNotEmpty == true) {
+      if (fistItem.english?.toLowerCase() != (input.toLowerCase().trim())) {
+        return "Incorrect!";
+      }
+    }
+    return null;
+  }
+
+  Text _buildScore() {
+    return Text(
+      "Score: $wordCounter",
+      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    );
+  }
+
   void _showAnswer(BuildContext context) {
     showAnswer.value = !showAnswer.value;
   }
@@ -302,11 +236,10 @@ class _AssignmentScreenState extends State<AssignmentScreen>
   void _onSubmit(BuildContext context, {bool clearText = true}) {
     if (formKey.currentState?.validate() == true) {
       if (wordsAssignment.isNotEmpty == true) {
-        showAnimation.value = true;
+        answerCorrect.value = true;
+        _textController.clear();
+        wordsAssignment.shuffle();
       }
-    }
-    if (clearText) {
-      textController.clear();
     }
     node.unfocus();
   }
@@ -316,19 +249,16 @@ class _AssignmentScreenState extends State<AssignmentScreen>
     setState(() {
       wordCounter++;
       wordsAssignment.removeAt(0);
-      wordsAssignment.shuffle();
       showAnswer.value = false;
-      showAnimation.value = false;
-      textController.clear();
+      answerCorrect.value = false;
     });
   }
 
-  void reset() {
+  void _reset() {
     setState(() {
       wordCounter = 0;
+      wordsAssignment.clear();
       wordsAssignment.addAll(widget.words);
-      wordsAssignment.shuffle();
-      textController.clear();
     });
   }
 }

@@ -36,6 +36,7 @@ class TopicList extends StatelessWidget {
                   },
                   child: Card(
                     child: ListTile(
+                      leading: Text("${index + 1}"),
                       title: Text(item),
                     ),
                   ),
