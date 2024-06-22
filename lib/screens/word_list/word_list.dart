@@ -3,13 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:go_router/go_router.dart';
 import 'package:vocabulary_training/models/favourite.dart';
 import 'package:vocabulary_training/models/word_item_model.dart';
 import 'package:vocabulary_training/screens/assignment/assignment_screen.dart';
 import 'package:vocabulary_training/screens/home/bloc/vocabulary/vocabulary_cubit.dart';
 import 'package:collection/collection.dart';
-import 'package:vocabulary_training/screens/stt/speech_to_text.dart';
 import '../home/bloc/favourite/favourite_cubit.dart';
 import '../../widgets/card_shrimer.dart';
 
@@ -117,7 +115,6 @@ class _WordListState extends State<WordList> {
                   final item = widget.list.elementAt(index);
                   return GestureDetector(
                     onTap: (){
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => SpeechToTextScreen(word: '${item.english}',)));
                     },
                     child: Card(
                       child: ListTile(

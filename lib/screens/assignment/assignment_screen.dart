@@ -69,6 +69,10 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
             _reset();
           }
         }
+      }else{
+        if (key == LogicalKeyboardKey.arrowUp.keyLabel) {
+          _showAnswer(context);
+        }
       }
     } else if (event is KeyRepeatEvent) {
       if(isUSingMicro.value != true){

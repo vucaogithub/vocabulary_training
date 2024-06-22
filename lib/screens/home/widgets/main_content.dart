@@ -29,17 +29,23 @@ class MainContent extends StatelessWidget {
       initialIndex: 0,
       child: Column(
         children: [
-          const TabBar(
-            tabs: <Widget>[
-              Tab(
-                icon: Icon(Icons.topic),
-                child: Text("Topic"),
-              ),
-              Tab(
-                icon: Icon(Icons.wordpress),
-                child: Text("All words"),
-              ),
-            ],
+          Container(
+            padding: EdgeInsets.only(top: MediaQuery.of(context).viewPadding.top),
+            color: Colors.blue,
+            child: const TabBar(
+              labelColor: Colors.white,
+              indicatorColor: Colors.white,
+              tabs: <Widget>[
+                Tab(
+                  icon: Icon(Icons.topic),
+                  child: Text("Topic"),
+                ),
+                Tab(
+                  icon: Icon(Icons.wordpress),
+                  child: Text("All words"),
+                ),
+              ],
+            ),
           ),
           Expanded(
             child: TabBarView(

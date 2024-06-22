@@ -41,6 +41,7 @@ class _MicroWidgetState extends State<MicroWidget> {
   /// listen method.
   void _stopListening(BuildContext context) async {
     await widget.speechToText.stop();
+    await widget.speechToText.cancel();
     await Future.delayed(const Duration(milliseconds: 100));
     if (context.mounted) {
       widget.onStopListen();
@@ -53,9 +54,8 @@ class _MicroWidgetState extends State<MicroWidget> {
   /// the platform returns recognized words.
   void _onSpeechResult(SpeechRecognitionResult result) {
     _lastWords = result.recognizedWords;
-    if (widget.speechToText.isListening) {
-      widget.textController.text = _lastWords;
-    }
+    print(DateTime.now().toIso8601String());
+    widget.textController.text = _lastWords;
   }
 
   @override
