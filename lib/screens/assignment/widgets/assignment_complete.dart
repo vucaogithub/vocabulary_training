@@ -14,7 +14,6 @@ class AssignmentComplete extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildScore(),
         const SizedBox(
           height: 12,
         ),

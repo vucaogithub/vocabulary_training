@@ -18,6 +18,9 @@ class MyApp extends StatelessWidget {
           seedColor: Colors.blue,
           brightness: Brightness.light,
         ),
+        cardTheme: CardTheme(
+          color: Colors.grey.shade300
+        ),
         appBarTheme: const AppBarTheme(
             color: Colors.blue,
             surfaceTintColor: Colors.white,

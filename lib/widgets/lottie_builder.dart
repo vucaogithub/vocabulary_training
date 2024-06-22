@@ -13,7 +13,8 @@ class LottieCommonBuilder extends StatefulWidget {
       required this.assetSource,
       required this.onAnimationComplete,
       required this.onAnimationLoaded,
-      this.repeat, required this.duration});
+      this.repeat,
+      required this.duration});
 
   @override
   State<LottieCommonBuilder> createState() => _LottieCommonBuilderState();
@@ -21,8 +22,19 @@ class LottieCommonBuilder extends StatefulWidget {
 
 class _LottieCommonBuilderState extends State<LottieCommonBuilder>
     with TickerProviderStateMixin {
-  late final AnimationController _controller =
-      AnimationController(vsync: this, duration: widget.duration);
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +44,7 @@ class _LottieCommonBuilderState extends State<LottieCommonBuilder>
       controller: _controller
         ..forward().whenComplete(() {
           widget.onAnimationComplete?.call();
-          if(widget.repeat == true){
+          if (widget.repeat == true) {
             _controller.repeat();
           }
         }),

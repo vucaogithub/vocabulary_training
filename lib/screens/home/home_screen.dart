@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nested/nested.dart';
+import 'package:vocabulary_training/models/topic_model.dart';
 import 'package:vocabulary_training/models/word_item_model.dart';
-import 'package:vocabulary_training/screens/home/bloc/favourite/favourite_cubit.dart';
 import 'package:vocabulary_training/screens/home/bloc/vocabulary/vocabulary_cubit.dart';
 import 'package:vocabulary_training/screens/home/widgets/main_content.dart';
 
@@ -17,15 +17,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final vocabularyCubit = VocabularyCubit();
-  final favouriteCubit = FavouriteCubit();
 
   List<SingleChildWidget> _initProviders() {
     return [
       BlocProvider(
         create: (context) => vocabularyCubit..fetchWords(),
-      ),
-      BlocProvider(
-        create: (context) => favouriteCubit..fetchFavouritesList(),
       ),
     ];
   }
@@ -38,18 +34,23 @@ class _HomeScreenState extends State<HomeScreen> {
         body: Center(
           child: BlocBuilder<VocabularyCubit, VocabularyState>(
               builder: (context, state) {
-            final topics = <String?>[];
+            final topics = <TopicModel>[];
             final list = <WordItemModel>[];
             if (state is VocabularySuccess) {
               list.addAll(state.items);
-              topics.addAll(list.map((e) => e.topic).toSet());
+              final topicName = list.map((e) => e.topic).toSet();
+              topics.addAll(topicName.map((e) {
+                return TopicModel("$e",
+                    words: list.where((test) {
+                      return test.topic == e;
+                    }).toList());
+              }).toSet());
             }
             return MainContent(
-                onRefresh: () =>
-                    Future.sync(() => vocabularyCubit.fetchWords()),
-                topics: topics.toSet(),
-                list: list,
-                );
+              onRefresh: () => Future.sync(() => vocabularyCubit.fetchWords()),
+              topics: topics.toSet(),
+              list: list,
+            );
           }),
         ),
       ),

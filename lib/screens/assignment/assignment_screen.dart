@@ -2,6 +2,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -9,6 +10,7 @@ import 'package:vocabulary_training/models/word_item_model.dart';
 import 'package:vocabulary_training/screens/assignment/widgets/correct_animation_widget.dart';
 import 'package:vocabulary_training/screens/assignment/widgets/micro_widget.dart';
 import 'package:vocabulary_training/widgets/lottie_builder.dart';
+import 'package:vocabulary_training/widgets/t_t_s_widget.dart';
 
 import 'widgets/assignment_app_bar.dart';
 import 'widgets/assignment_complete.dart';
@@ -32,7 +34,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
   final answerCorrect = ValueNotifier(false);
   final SpeechToText _speechToText = SpeechToText();
 
-  int wordCounter = 0;
+  late int wordCounter = wordsAssignment.length;
 
   @override
   void initState() {
@@ -122,21 +124,18 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                       onAnimationComplete: _next,
                     );
                   }
-                  final isCompleted = fistItem == null && wordCounter > 0;
+                  final isCompleted = fistItem == null && wordCounter == 0;
                   if (isCompleted) {
                     return AssignmentComplete(
                       wordCounter: wordCounter,
                       onTryAgainPressed: _reset,
                     );
                   }
-                  if (fistItem == null) {
-                    return const Text("List is empty");
-                  }
                   return Column(
                     children: [
                       _buildScore(),
                       SelectableText(
-                        "${fistItem.vietnamese}",
+                        "${fistItem?.vietnamese}",
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w500),
@@ -146,7 +145,13 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                           builder: (context, isShowing, child) {
                             return Opacity(
                                 opacity: isShowing == true ? 1 : 0,
-                                child: SelectableText("${fistItem.english}"));
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SelectableText("${fistItem?.english}"),
+                                    TTSWidget(text: fistItem?.english,)
+                                  ],
+                                ));
                           }),
                       Container(
                         constraints: const BoxConstraints(maxWidth: 500),
@@ -214,12 +219,12 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
     );
   }
 
-  String? _inputValidation(String? input, WordItemModel fistItem) {
+  String? _inputValidation(String? input, WordItemModel? fistItem) {
     if (input == null || input.isEmpty == true) {
       return "Please type your answer!";
     }
     if (input.isNotEmpty == true) {
-      if (fistItem.english?.toLowerCase() != (input.toLowerCase().trim())) {
+      if (fistItem?.english?.toLowerCase() != (input.toLowerCase().trim())) {
         return "Incorrect!";
       }
     }
@@ -228,7 +233,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
 
   Text _buildScore() {
     return Text(
-      "Score: $wordCounter",
+      "$wordCounter words remaining.",
       style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
     );
   }
@@ -242,7 +247,6 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
       if (wordsAssignment.isNotEmpty == true) {
         answerCorrect.value = true;
         _textController.clear();
-        wordsAssignment.shuffle();
       }
     }
     node.unfocus();
@@ -251,8 +255,9 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
   Future<void> _next() async {
     await Future.delayed(const Duration(milliseconds: 100));
     setState(() {
-      wordCounter++;
+      wordCounter--;
       wordsAssignment.removeAt(0);
+      wordsAssignment.shuffle();
       showAnswer.value = false;
       answerCorrect.value = false;
     });

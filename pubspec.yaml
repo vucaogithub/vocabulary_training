@@ -47,6 +47,7 @@ dependencies:
   lottie: ^3.1.2
   avatar_glow: ^3.0.1
   rename_app: ^1.5.0
+  flutter_tts: ^4.0.2
 
 dev_dependencies:
   flutter_test:

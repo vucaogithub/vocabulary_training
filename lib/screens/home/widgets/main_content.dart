@@ -1,11 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
-import 'package:speech_to_text/speech_to_text.dart';
+import 'package:vocabulary_training/models/topic_model.dart';
 import 'package:vocabulary_training/models/word_item_model.dart';
-import 'package:vocabulary_training/screens/home/bloc/favourite/favourite_cubit.dart';
 import 'package:vocabulary_training/screens/home/bloc/vocabulary/vocabulary_cubit.dart';
 import 'package:vocabulary_training/screens/home/widgets/topic_list.dart';
 import 'package:vocabulary_training/screens/word_list/word_list.dart';
@@ -19,7 +18,7 @@ class MainContent extends StatelessWidget {
   });
 
   final Future<void> Function() onRefresh;
-  final Set<String?> topics;
+  final Set<TopicModel> topics;
   final List<WordItemModel> list;
 
   @override
@@ -34,7 +33,9 @@ class MainContent extends StatelessWidget {
             color: Colors.blue,
             child: const TabBar(
               labelColor: Colors.white,
-              indicatorColor: Colors.white,
+              indicatorColor: Colors.transparent,
+              labelStyle: TextStyle(fontSize: 18),
+              unselectedLabelStyle: TextStyle(fontSize: 14),
               tabs: <Widget>[
                 Tab(
                   icon: Icon(Icons.topic),
@@ -53,9 +54,8 @@ class MainContent extends StatelessWidget {
                 TopicList(
                   topics: topics.toList(),
                   onRefresh: onRefresh,
-                  onTopicTap: (String? topic) {
+                  onTopicTap: (TopicModel topic) {
                     final vocabularyCubit = context.read<VocabularyCubit>();
-                    final favouriteCubit = context.read<FavouriteCubit>();
                     Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -65,14 +65,9 @@ class MainContent extends StatelessWidget {
                                     BlocProvider.value(
                                       value: vocabularyCubit,
                                     ),
-                                    BlocProvider.value(
-                                      value: favouriteCubit,
-                                    ),
                                   ],
                                   child: WordList(
-                                      list: list
-                                          .where((word) => word.topic == topic)
-                                          .toList(),
+                                      list: topic.words,
                                       onRefresh: onRefresh),
                                 )));
                   },

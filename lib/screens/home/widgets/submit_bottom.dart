@@ -2,18 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:vocabulary_training/models/favourite.dart';
-import 'package:vocabulary_training/screens/home/bloc/favourite/favourite_cubit.dart';
 
 class SubmitBottom extends StatelessWidget {
   const SubmitBottom({
     super.key,
     required this.enableSubmit,
-    required this.favouriteCubit,
     required this.oldList,
   });
 
   final StreamController enableSubmit;
-  final FavouriteCubit favouriteCubit;
   final List<Favourite> oldList;
 
   @override
@@ -28,11 +25,6 @@ class SubmitBottom extends StatelessWidget {
                   shape: const RoundedRectangleBorder()),
               onPressed: snapshot.data == true
                   ? () {
-                      final state = favouriteCubit.state;
-                      if (state is FavouriteSuccess) {
-                        favouriteCubit.submit(state.favourites);
-                        oldList.clear();
-                      }
                     }
                   : null,
               child: const Text(
