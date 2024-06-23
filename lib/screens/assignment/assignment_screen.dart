@@ -41,6 +41,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
   @override
   void initState() {
     super.initState();
+    _initSpeech();
     wordsAssignment.shuffle();
     ServicesBinding.instance.keyboard.addHandler(_onKey);
   }
@@ -121,7 +122,6 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
           preferredSize: const Size.fromHeight(kBottomNavigationBarHeight),
           child: AssignmentAppBar(isUSingMicro: isUSingMicro, onMicroStatusChange: (bool isUsingMic) {
             if(isUsingMic){
-              _initSpeech();
             }
           },),
         ),
