@@ -33,13 +33,14 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
   final isUSingMicro = ValueNotifier(false);
   final answerCorrect = ValueNotifier(false);
   final SpeechToText _speechToText = SpeechToText();
+  int score = 0;
+  bool isUseSupport = false;
 
   late int wordCounter = wordsAssignment.length;
 
   @override
   void initState() {
     super.initState();
-    _initSpeech();
     wordsAssignment.shuffle();
     ServicesBinding.instance.keyboard.addHandler(_onKey);
   }
@@ -70,6 +71,8 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
           if (fistItem == null && wordCounter > 0) {
             _reset();
           }
+        }else if( key == LogicalKeyboardKey.escape.keyLabel){
+          _skipWord();
         }
       }else{
         if (key == LogicalKeyboardKey.arrowUp.keyLabel) {
@@ -89,118 +92,147 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: ValueListenableBuilder(
-        valueListenable: isUSingMicro,
-        builder: (context, useMic, child) {
-          final fistItem = wordsAssignment.firstOrNull;
-          final isCompleted = fistItem == null && wordCounter > 0;
-          if (useMic && !isCompleted) {
-            return MicroWidget(
-                answerCorrect: answerCorrect,
-                speechToText: _speechToText,
-                textController: _textController,
-                onStopListen: () {
-                  _onSubmit(context, clearText: false);
-                }, enableMic: useMic,);
-          }
-          return const SizedBox();
-        },
-      ),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kBottomNavigationBarHeight),
-        child: AssignmentAppBar(isUSingMicro: isUSingMicro),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: ValueListenableBuilder(
-                valueListenable: answerCorrect,
-                builder: (context, isShowAnimation, child) {
-                  final fistItem = wordsAssignment.firstOrNull;
-                  if (isShowAnimation) {
-                    return CorrectAnimationWidget(
-                      onAnimationComplete: _next,
-                    );
-                  }
-                  final isCompleted = fistItem == null && wordCounter == 0;
-                  if (isCompleted) {
-                    return AssignmentComplete(
-                      wordCounter: wordCounter,
-                      onTryAgainPressed: _reset,
-                    );
-                  }
-                  return Column(
-                    children: [
-                      _buildScore(),
-                      SelectableText(
-                        "${fistItem?.vietnamese}",
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
-                      ValueListenableBuilder(
-                          valueListenable: showAnswer,
-                          builder: (context, isShowing, child) {
-                            return Opacity(
-                                opacity: isShowing == true ? 1 : 0,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    SelectableText("${fistItem?.english}"),
-                                    TTSWidget(text: fistItem?.english,)
-                                  ],
-                                ));
-                          }),
-                      Container(
-                        constraints: const BoxConstraints(maxWidth: 500),
-                        child: Form(
-                          key: formKey,
-                          child: ValueListenableBuilder(
-                              valueListenable: isUSingMicro,
-                              builder: (context, useMic, child) {
-                                return TextFormField(
-                                  focusNode: node,
-                                  autofocus: true,
-                                  readOnly: useMic,
-                                  controller: _textController,
-                                  validator: (input) {
-                                    return _inputValidation(input, fistItem);
-                                  },
-                                  decoration: const InputDecoration(
-                                      border: OutlineInputBorder()),
-                                  onFieldSubmitted: (value) {
-                                    _onSubmit(context);
-                                  },
-                                );
-                              }),
+      floatingActionButton: FloatingActionButton(onPressed: (){
+        showInfoDialog(context);
+      },child: const Icon(Icons.info,color: Colors.blue,),),
+      body: Scaffold(
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        floatingActionButton: ValueListenableBuilder(
+          valueListenable: isUSingMicro,
+          builder: (context, useMic, child) {
+            final fistItem = wordsAssignment.firstOrNull;
+            final isCompleted = fistItem == null && wordCounter > 0;
+            if (useMic && !isCompleted) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 20),
+                child: MicroWidget(
+                    answerCorrect: answerCorrect,
+                    speechToText: _speechToText,
+                    textController: _textController,
+                    onStopListen: () {
+                      _onSubmit(context, clearText: false);
+                    }, enableMic: useMic,),
+              );
+            }
+            return const SizedBox();
+          },
+        ),
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(kBottomNavigationBarHeight),
+          child: AssignmentAppBar(isUSingMicro: isUSingMicro, onMicroStatusChange: (bool isUsingMic) {
+            if(isUsingMic){
+              _initSpeech();
+            }
+          },),
+        ),
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: ValueListenableBuilder(
+                  valueListenable: answerCorrect,
+                  builder: (context, isShowAnimation, child) {
+                    final fistItem = wordsAssignment.firstOrNull;
+                    if (isShowAnimation) {
+                      return CorrectAnimationWidget(
+                        onAnimationComplete: _next,
+                      );
+                    }
+                    final isCompleted = fistItem == null && wordCounter == 0;
+                    if (isCompleted) {
+                      return AssignmentComplete(
+                        wordCounter: wordCounter,
+                        onTryAgainPressed: _reset,
+                      );
+                    }
+                    return Column(
+                      children: [
+                        _buildScore(),
+                        Text("Score: $score",
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w700),),
+                        SelectableText(
+                          "${fistItem?.meaning}",
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w500),
                         ),
-                      ),
-                      const SizedBox(
-                        height: 12,
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildElevatedButton(
-                              title: "Show answer",
-                              onPressed: () {
-                                _showAnswer(context);
-                              }),
-                          const SizedBox(
-                            width: 12,
+                        SelectableText(
+                          "${fistItem?.vietnamese}",
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w500),
+                        ),
+                        ValueListenableBuilder(
+                            valueListenable: showAnswer,
+                            builder: (context, isShowing, child) {
+                              return Opacity(
+                                  opacity: isShowing == true ? 1 : 0,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SelectableText("${fistItem?.english}"),
+                                      TTSWidget(text: fistItem?.english,)
+                                    ],
+                                  ));
+                            }),
+                        Container(
+                          constraints: const BoxConstraints(maxWidth: 500),
+                          child: Form(
+                            key: formKey,
+                            child: ValueListenableBuilder(
+                                valueListenable: isUSingMicro,
+                                builder: (context, useMic, child) {
+                                  return TextFormField(
+                                    focusNode: node,
+                                    autofocus: true,
+                                    readOnly: useMic,
+                                    controller: _textController,
+                                    validator: (input) {
+                                      return _inputValidation(input, fistItem);
+                                    },
+                                    decoration: const InputDecoration(
+                                        border: OutlineInputBorder()),
+                                    onFieldSubmitted: (value) {
+                                      _onSubmit(context);
+                                    },
+                                  );
+                                }),
                           ),
-                          _buildElevatedButton(
-                              onPressed: () {
-                                _onSubmit(context);
-                              },
-                              title: "Submit"),
-                        ],
-                      )
-                    ],
-                  );
-                }),
+                        ),
+                        const SizedBox(
+                          height: 12,
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildElevatedButton(
+                                title: "Show answer",
+                                onPressed: () {
+                                  _showAnswer(context);
+                                }),
+                            const SizedBox(
+                              width: 12,
+                            ),
+                            _buildElevatedButton(
+                                onPressed: () {
+                                  _skipWord();
+                                },
+                                title: "Skip"),
+                            const SizedBox(
+                              width: 12,
+                            ),
+                            _buildElevatedButton(
+                                onPressed: () {
+                                  _onSubmit(context);
+                                },
+                                title: "Submit"),
+                          ],
+                        )
+                      ],
+                    );
+                  }),
+            ),
           ),
         ),
       ),
@@ -240,8 +272,19 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
 
   void _showAnswer(BuildContext context) {
     showAnswer.value = !showAnswer.value;
+    isUseSupport = true;
   }
 
+  Future<void> _skipWord() async {
+    await Future.delayed(const Duration(milliseconds: 100));
+    setState(() {
+      wordsAssignment.shuffle();
+      showAnswer.value = false;
+      answerCorrect.value = false;
+      _textController.clear();
+      isUseSupport = false;
+    });
+  }
   void _onSubmit(BuildContext context, {bool clearText = true}) {
     if (formKey.currentState?.validate() == true) {
       if (wordsAssignment.isNotEmpty == true) {
@@ -255,11 +298,15 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
   Future<void> _next() async {
     await Future.delayed(const Duration(milliseconds: 100));
     setState(() {
+      if(!isUseSupport){
+        score++;
+      }
       wordCounter--;
       wordsAssignment.removeAt(0);
       wordsAssignment.shuffle();
       showAnswer.value = false;
       answerCorrect.value = false;
+      isUseSupport = false;
     });
   }
 
@@ -269,5 +316,32 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
       wordsAssignment.clear();
       wordsAssignment.addAll(widget.words);
     });
+  }
+
+  Future<void> showInfoDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true, // Allow escape to dismiss
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Shortcut'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('- Press Up Arrow to show answer'),
+                Text('- Hold Space Key to open microphone'),
+                Text('- Press Escape to skip question'),
+              ],
+            ),
+          ),
+          actions: <TextButton>[
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
