@@ -38,19 +38,27 @@ class _LottieCommonBuilderState extends State<LottieCommonBuilder>
 
   @override
   Widget build(BuildContext context) {
-    return Lottie.asset(
-      widget.assetSource,
-      repeat: widget.repeat,
-      controller: _controller
-        ..forward().whenComplete(() {
-          widget.onAnimationComplete?.call();
-          if (widget.repeat == true) {
-            _controller.repeat();
-          }
-        }),
-      onLoaded: (composition) {
-        widget.onAnimationLoaded?.call();
-      },
+    return FutureBuilder(
+      future: Future.sync(()=>const Duration(milliseconds: 200)),
+      builder: (context,snapshot) {
+        if(snapshot.connectionState == ConnectionState.done){
+          return Lottie.asset(
+            widget.assetSource,
+            repeat: widget.repeat,
+            controller: _controller
+              ..forward().whenComplete(() {
+                widget.onAnimationComplete?.call();
+                if (widget.repeat == true) {
+                  _controller.repeat();
+                }
+              }),
+            onLoaded: (composition) {
+              widget.onAnimationLoaded?.call();
+            },
+          );
+        }
+        return const SizedBox();
+      }
     );
   }
 }

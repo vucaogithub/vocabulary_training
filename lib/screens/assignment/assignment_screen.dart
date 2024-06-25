@@ -1,15 +1,9 @@
-import 'package:audioplayers/audioplayers.dart';
-import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_tts/flutter_tts.dart';
-import 'package:lottie/lottie.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:vocabulary_training/models/word_item_model.dart';
 import 'package:vocabulary_training/screens/assignment/widgets/correct_animation_widget.dart';
 import 'package:vocabulary_training/screens/assignment/widgets/micro_widget.dart';
-import 'package:vocabulary_training/widgets/lottie_builder.dart';
 import 'package:vocabulary_training/widgets/t_t_s_widget.dart';
 
 import 'widgets/assignment_app_bar.dart';
@@ -50,7 +44,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
   void dispose() {
     super.dispose();
     _speechToText.cancel();
-    ServicesBinding.instance.keyboard.addHandler(_onKey);
+    ServicesBinding.instance.keyboard.removeHandler(_onKey);
   }
   /// This has to happen only once per app
   void _initSpeech() async {
@@ -69,7 +63,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
           _showAnswer(context);
         } else if (key == LogicalKeyboardKey.enter.keyLabel) {
           final fistItem = wordsAssignment.firstOrNull;
-          if (fistItem == null && wordCounter > 0) {
+          if (fistItem == null && wordCounter <= 0) {
             _reset();
           }
         }else if( key == LogicalKeyboardKey.escape.keyLabel){
@@ -143,6 +137,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                       return AssignmentComplete(
                         wordCounter: wordCounter,
                         onTryAgainPressed: _reset,
+                        score: score,
                       );
                     }
                     return Column(
@@ -312,7 +307,8 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
 
   void _reset() {
     setState(() {
-      wordCounter = 0;
+      wordCounter = widget.words.length;
+      score = 0;
       wordsAssignment.clear();
       wordsAssignment.addAll(widget.words);
     });

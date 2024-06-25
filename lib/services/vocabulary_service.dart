@@ -6028,21 +6028,4 @@ class VocabularyService{
     ];
     return data;
   }
-  // Future<List<Favourite>> getAllFavourite() async {
-  //   const endPoint = baseUrl;
-  //   final data = await Dio().get(endPoint,queryParameters: {
-  //     "type":"GET_MY_FAVOURIST"
-  //   });
-  //   final list = data.data as List<dynamic>;
-  //   final response = list.map((jsonString) {
-  //     final item = Favourite.fromJson((jsonString));
-  //     return item;
-  //   }).toList();
-  //   return response;
-  // }
-  // Future<dynamic> postAllFavourite(PostFavourite payload) async {
-  //   const endPoint = baseUrl;
-  //   final data = await Dio().post(endPoint,data: payload.toJson());
-  //   return data;
-  // }
 }
