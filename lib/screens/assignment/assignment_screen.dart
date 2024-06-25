@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'package:vocabulary_training/models/assignment_model.dart';
 import 'package:vocabulary_training/models/word_item_model.dart';
 import 'package:vocabulary_training/screens/assignment/widgets/correct_animation_widget.dart';
 import 'package:vocabulary_training/screens/assignment/widgets/micro_widget.dart';
@@ -10,7 +11,7 @@ import 'widgets/assignment_app_bar.dart';
 import 'widgets/assignment_complete.dart';
 
 class AssignmentScreen extends StatefulWidget {
-  final List<WordItemModel> words;
+  final List<AssignmentItem> words;
 
   const AssignmentScreen({super.key, required this.words});
 
@@ -19,7 +20,7 @@ class AssignmentScreen extends StatefulWidget {
 }
 
 class _AssignmentScreenState extends State<AssignmentScreen> {
-  late final wordsAssignment = List<WordItemModel>.from(widget.words);
+  late final AssignmentModel assignmentModel = AssignmentModel(widget.words);
   final FocusNode node = FocusNode();
   final _textController = TextEditingController();
   final formKey = GlobalKey<FormState>();
@@ -27,16 +28,12 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
   final isUSingMicro = ValueNotifier(false);
   final answerCorrect = ValueNotifier(false);
   final SpeechToText _speechToText = SpeechToText();
-  int score = 0;
-  bool isUseSupport = false;
-
-  late int wordCounter = wordsAssignment.length;
 
   @override
   void initState() {
     super.initState();
     _initSpeech();
-    wordsAssignment.shuffle();
+    assignmentModel.assignment.shuffle();
     ServicesBinding.instance.keyboard.addHandler(_onKey);
   }
 
@@ -46,6 +43,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
     _speechToText.cancel();
     ServicesBinding.instance.keyboard.removeHandler(_onKey);
   }
+
   /// This has to happen only once per app
   void _initSpeech() async {
     await _speechToText.initialize();
@@ -55,27 +53,27 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
   bool _onKey(KeyEvent event) {
     final key = event.logicalKey.keyLabel;
     if (event is KeyDownEvent) {
-      if(isUSingMicro.value != true){
+      final fistItem = assignmentModel.firstOrNull;
+      if (isUSingMicro.value != true) {
         if (!node.hasFocus) {
           FocusScope.of(context).requestFocus(node);
         }
         if (key == LogicalKeyboardKey.arrowUp.keyLabel) {
           _showAnswer(context);
         } else if (key == LogicalKeyboardKey.enter.keyLabel) {
-          final fistItem = wordsAssignment.firstOrNull;
-          if (fistItem == null && wordCounter <= 0) {
-            _reset();
+          if (fistItem == null && assignmentModel.wordRemaining <= 0) {
+            _reset(context,widget.words);
           }
-        }else if( key == LogicalKeyboardKey.escape.keyLabel){
+        } else if (key == LogicalKeyboardKey.escape.keyLabel) {
           _skipWord();
         }
-      }else{
+      } else {
         if (key == LogicalKeyboardKey.arrowUp.keyLabel) {
           _showAnswer(context);
         }
       }
     } else if (event is KeyRepeatEvent) {
-      if(isUSingMicro.value != true){
+      if (isUSingMicro.value != true) {
         if (key == LogicalKeyboardKey.enter.keyLabel) {
           node.unfocus();
         }
@@ -87,26 +85,35 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(onPressed: (){
-        showInfoDialog(context);
-      },child: const Icon(Icons.info,color: Colors.blue,),),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showInfoDialog(context);
+        },
+        child: const Icon(
+          Icons.info,
+          color: Colors.blue,
+        ),
+      ),
       body: Scaffold(
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: ValueListenableBuilder(
           valueListenable: isUSingMicro,
           builder: (context, useMic, child) {
-            final fistItem = wordsAssignment.firstOrNull;
-            final isCompleted = fistItem == null && wordCounter > 0;
+            final fistItem = assignmentModel.firstOrNull;
+            final isCompleted =
+                fistItem == null && assignmentModel.wordRemaining > 0;
             if (useMic && !isCompleted) {
               return Container(
                 margin: const EdgeInsets.only(bottom: 20),
                 child: MicroWidget(
-                    answerCorrect: answerCorrect,
-                    speechToText: _speechToText,
-                    textController: _textController,
-                    onStopListen: () {
-                      _onSubmit(context, clearText: false);
-                    }, enableMic: useMic,),
+                  answerCorrect: answerCorrect,
+                  speechToText: _speechToText,
+                  textController: _textController,
+                  onStopListen: () {
+                    _onSubmit(context, clearText: false);
+                  },
+                  enableMic: useMic,
+                ),
               );
             }
             return const SizedBox();
@@ -114,10 +121,12 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
         ),
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(kBottomNavigationBarHeight),
-          child: AssignmentAppBar(isUSingMicro: isUSingMicro, onMicroStatusChange: (bool isUsingMic) {
-            if(isUsingMic){
-            }
-          },),
+          child: AssignmentAppBar(
+            isUSingMicro: isUSingMicro,
+            onMicroStatusChange: (bool isUsingMic) {
+              if (isUsingMic) {}
+            },
+          ),
         ),
         body: SafeArea(
           child: Center(
@@ -126,26 +135,33 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
               child: ValueListenableBuilder(
                   valueListenable: answerCorrect,
                   builder: (context, isShowAnimation, child) {
-                    final fistItem = wordsAssignment.firstOrNull;
+                    final fistItem = assignmentModel.firstOrNull;
                     if (isShowAnimation) {
                       return CorrectAnimationWidget(
                         onAnimationComplete: _next,
                       );
                     }
-                    final isCompleted = fistItem == null && wordCounter == 0;
+                    final isCompleted =
+                        fistItem == null && assignmentModel.wordRemaining == 0;
                     if (isCompleted) {
                       return AssignmentComplete(
-                        wordCounter: wordCounter,
-                        onTryAgainPressed: _reset,
-                        score: score,
+                        assignmentModel: assignmentModel,
+                        onTryAgainPressed: (){
+                          _reset(context, widget.words);
+                        },
+                        onRetest: (List<AssignmentItem> list) {
+                          _reset(context, list);
+                        },
                       );
                     }
                     return Column(
                       children: [
                         _buildScore(),
-                        Text("Score: $score",
+                        Text(
+                          "Score: ${assignmentModel.score}",
                           style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w700),),
+                              fontSize: 16, fontWeight: FontWeight.w700),
+                        ),
                         SelectableText(
                           "${fistItem?.meaning}",
                           textAlign: TextAlign.center,
@@ -167,7 +183,9 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       SelectableText("${fistItem?.english}"),
-                                      TTSWidget(text: fistItem?.english,)
+                                      TTSWidget(
+                                        text: fistItem?.english,
+                                      )
                                     ],
                                   ));
                             }),
@@ -210,9 +228,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                               width: 12,
                             ),
                             _buildElevatedButton(
-                                onPressed: () {
-                                  _skipWord();
-                                },
+                                onPressed: _skipWord,
                                 title: "Skip"),
                             const SizedBox(
                               width: 12,
@@ -260,29 +276,30 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
 
   Text _buildScore() {
     return Text(
-      "$wordCounter words remaining.",
+      "${assignmentModel.wordRemaining} words remaining.",
       style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
     );
   }
 
   void _showAnswer(BuildContext context) {
     showAnswer.value = !showAnswer.value;
-    isUseSupport = true;
+    final item = assignmentModel.firstOrNull;
+    item?.isNeedHelp = true;
   }
 
   Future<void> _skipWord() async {
     await Future.delayed(const Duration(milliseconds: 100));
     setState(() {
-      wordsAssignment.shuffle();
+      assignmentModel.moveItemToLast();
       showAnswer.value = false;
       answerCorrect.value = false;
       _textController.clear();
-      isUseSupport = false;
     });
   }
+
   void _onSubmit(BuildContext context, {bool clearText = true}) {
     if (formKey.currentState?.validate() == true) {
-      if (wordsAssignment.isNotEmpty == true) {
+      if (assignmentModel.assignment.isNotEmpty == true) {
         answerCorrect.value = true;
         _textController.clear();
       }
@@ -293,25 +310,24 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
   Future<void> _next() async {
     await Future.delayed(const Duration(milliseconds: 100));
     setState(() {
-      if(!isUseSupport){
-        score++;
-      }
-      wordCounter--;
-      wordsAssignment.removeAt(0);
-      wordsAssignment.shuffle();
+      final item = assignmentModel.firstOrNull;
+      item?.isDone = true;
       showAnswer.value = false;
       answerCorrect.value = false;
-      isUseSupport = false;
     });
   }
 
-  void _reset() {
-    setState(() {
-      wordCounter = widget.words.length;
-      score = 0;
-      wordsAssignment.clear();
-      wordsAssignment.addAll(widget.words);
-    });
+  void _reset(BuildContext context,List<AssignmentItem> items) {
+    Navigator.pop(context);
+    final newList = items.map((e) {
+      e.reset();
+      return e;
+    }).toList();
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                AssignmentScreen(words: newList)));
   }
 
   Future<void> showInfoDialog(BuildContext context) async {

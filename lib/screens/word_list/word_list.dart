@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:vocabulary_training/models/assignment_model.dart';
 import 'package:vocabulary_training/models/favourite.dart';
 import 'package:vocabulary_training/models/word_item_model.dart';
 import 'package:vocabulary_training/screens/assignment/assignment_screen.dart';
@@ -48,8 +49,12 @@ class _WordListState extends State<WordList> {
                   await Navigator.push(
                     context,
                     MaterialPageRoute(
+                      maintainState: false,
                       builder: (context) => AssignmentScreen(
-                        words: listSelected,
+                        words: listSelected
+                            .map((item) =>
+                                AssignmentItem.fromWordItemModel(item))
+                            .toList(),
                       ),
                     ),
                   );
