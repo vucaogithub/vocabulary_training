@@ -2,15 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:vocabulary_training/models/assignment_model.dart';
-import 'package:vocabulary_training/models/favourite.dart';
 import 'package:vocabulary_training/models/word_item_model.dart';
-import 'package:vocabulary_training/screens/assignment/assignment_screen.dart';
 import 'package:vocabulary_training/screens/home/bloc/vocabulary/vocabulary_cubit.dart';
-import 'package:collection/collection.dart';
+import 'package:vocabulary_training/widgets/float_button_menu_app.dart';
 import 'package:vocabulary_training/widgets/common_check_box.dart';
 import 'package:vocabulary_training/widgets/t_t_s_widget.dart';
+
 import '../../widgets/card_shrimer.dart';
 
 class WordList extends StatefulWidget {
@@ -25,7 +22,6 @@ class WordList extends StatefulWidget {
 
 class _WordListState extends State<WordList> {
   late final vocabularyCubit = context.read<VocabularyCubit>();
-  final isDialOpen = ValueNotifier(false);
   bool isSelectAll = false;
 
   @override
@@ -37,39 +33,10 @@ class _WordListState extends State<WordList> {
               title: const Text("Topic"),
             )
           : null,
-      floatingActionButton: SpeedDial(
-        openCloseDial: isDialOpen,
-        children: [
-          SpeedDialChild(
-              label: "Take assignment",
-              onTap: () async {
-                final listSelected =
-                    widget.list.where((e) => e.isSelected).toList();
-                if (listSelected.isNotEmpty) {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      maintainState: false,
-                      builder: (context) => AssignmentScreen(
-                        words: listSelected
-                            .map((item) =>
-                                AssignmentItem.fromWordItemModel(item))
-                            .toList(),
-                      ),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text(
-                        "Please, Choose at least word!",
-                        style: TextStyle(color: Colors.black),
-                      ),
-                      backgroundColor: Colors.amber));
-                }
-              },
-              child: const Icon(Icons.assignment)),
-        ],
-        child: const Icon(Icons.menu),
+      floatingActionButton: FloatButtonMenuApp(
+        doUpdateList: (List<WordItemModel> words) {
+          return widget.list.where((e) => e.isSelected).toList();
+        },
       ),
       body: RefreshIndicator(
         onRefresh: widget.onRefresh,

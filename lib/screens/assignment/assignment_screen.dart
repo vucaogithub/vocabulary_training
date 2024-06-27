@@ -182,7 +182,8 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      SelectableText("${fistItem?.english}"),
+                                      SelectableText("${fistItem?.english}",style: const TextStyle(fontWeight: FontWeight.bold),),
+                                      SelectableText("${fistItem?.phonetics}"),
                                       TTSWidget(
                                         text: fistItem?.english,
                                       )

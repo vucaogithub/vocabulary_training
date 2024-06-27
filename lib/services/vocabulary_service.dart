@@ -13,17 +13,17 @@ class VocabularyService{
   Future<List<WordItemModel>> getAllWords() async {
     const endPoint = baseUrl;
 
-    final data = await Dio().get(endPoint,queryParameters: {
-      "type":"GET_ALL_WORDS"
-    });
-    final list = data.data as List<dynamic>;
-    final response = list.map((jsonString) {
+    // final data = await Dio().get(endPoint,queryParameters: {
+    //   "type":"GET_ALL_WORDS"
+    // });
+    // final list = data.data as List<dynamic>;
+    final response = mockData().map((jsonString) {
       final item = WordItemModel.fromJson((jsonString));
       return item;
     }).toList();
     return response;
   }
-  List<Map<String,dynamic>> data(){
+  List<Map<String,dynamic>> mockData(){
     final data = [
       {
         "1": 2,

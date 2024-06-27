@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vocabulary_training/models/topic_model.dart';
 import 'package:vocabulary_training/models/word_item_model.dart';
 import 'package:vocabulary_training/screens/home/bloc/vocabulary/vocabulary_cubit.dart';
-import 'package:vocabulary_training/screens/home/widgets/topic_list.dart';
+import 'package:vocabulary_training/screens/topic_list_screen/topic_list_screen.dart';
 import 'package:vocabulary_training/screens/word_list/word_list.dart';
 
 class MainContent extends StatelessWidget {
