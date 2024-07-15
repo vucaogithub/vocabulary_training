@@ -9,11 +9,18 @@ part 'vocabulary_state.dart';
 
 class VocabularyCubit extends Cubit<VocabularyState> {
   final _service = VocabularyService();
+
   VocabularyCubit() : super(VocabularyInitial());
 
   fetchWords() async {
     emit(VocabularyLoading());
     final data = await _service.getAllWords();
-    emit(VocabularySuccess(items: data));
+    emit(
+      VocabularySuccess(
+        items: data.where((e) {
+          return e.enable != false;
+        }).toList(),
+      ),
+    );
   }
 }

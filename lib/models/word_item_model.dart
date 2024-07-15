@@ -7,6 +7,7 @@ class WordItemModel {
   final String? meaning;
   final String? example;
   final String? exampleVietnamese;
+  final bool? enable;
 
   bool isSelected = false;
 
@@ -19,6 +20,7 @@ class WordItemModel {
     this.meaning,
     this.example,
     this.exampleVietnamese,
+    this.enable,
   });
 
   factory WordItemModel.fromJson(Map<String, dynamic> json) => WordItemModel(
@@ -30,6 +32,7 @@ class WordItemModel {
     meaning: json["meaning"],
     example: json["example"],
     exampleVietnamese: json["example_vietnamese"],
+    enable: json["enable"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -41,5 +44,6 @@ class WordItemModel {
     "meaning": meaning,
     "example": example,
     "example_vietnamese": exampleVietnamese,
+    "enable": enable,
   };
 }
