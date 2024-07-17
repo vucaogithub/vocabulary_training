@@ -15,7 +15,7 @@ class FlashCard extends StatefulWidget {
 
 class _FlashCardState extends State<FlashCard> {
   final PageController controller = PageController(initialPage: 0);
-
+  late final currentWord = ValueNotifier<WordItemModel?>(widget.words.firstOrNull);
   @override
   void initState() {
     super.initState();
@@ -62,6 +62,9 @@ class _FlashCardState extends State<FlashCard> {
           ),
           Expanded(
             child: StackedCardCarousel(
+              onPageChanged: (index){
+                currentWord.value = widget.words.elementAtOrNull(index);
+              },
               pageController: controller,
               initialOffset:
                   (MediaQuery.sizeOf(context).height - itemHeight) / 3,
@@ -80,6 +83,7 @@ class _FlashCardState extends State<FlashCard> {
                       FlashCardItem(
                         itemHeight: itemHeight,
                         word: word,
+                currentWord:currentWord,
                         doFlip: (flipController) {
                           final index = widget.words.indexOf(word);
                           if (controller.page == index.toDouble()) {

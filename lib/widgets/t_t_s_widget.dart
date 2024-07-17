@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 class TTSWidget extends StatefulWidget {
+  final FlutterTts? flutterTts;
   final String? text;
 
-  const TTSWidget({super.key, required this.text});
+  const TTSWidget({super.key, required this.text, this.flutterTts});
 
   @override
   _TTSWidgetState createState() => _TTSWidgetState();
 }
 
 class _TTSWidgetState extends State<TTSWidget> {
-  FlutterTts flutterTts = FlutterTts();
+  late final flutterTts = widget.flutterTts ?? FlutterTts();
   final isSpeakDone = ValueNotifier(true);
 
   @override

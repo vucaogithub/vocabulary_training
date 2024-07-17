@@ -2,15 +2,18 @@ import 'package:flip_card/flip_card.dart';
 import 'package:flip_card/flip_card_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:vocabulary_training/models/word_item_model.dart';
+import 'package:vocabulary_training/widgets/t_t_s_widget.dart';
 
 class FlashCardItem extends StatefulWidget {
   const FlashCardItem({
     super.key,
     required this.itemHeight,
-    required this.word, required this.doFlip,
+    required this.word, required this.doFlip, required this.currentWord,
   });
 
+  final ValueNotifier<WordItemModel?> currentWord;
   final Function(FlipCardController controller) doFlip;
   final WordItemModel word;
   final double itemHeight;
@@ -20,7 +23,7 @@ class FlashCardItem extends StatefulWidget {
 }
 
 class _FlashCardItemState extends State<FlashCardItem> {
-
+  final FlutterTts flutterTts = FlutterTts();
   final FlipCardController controller = FlipCardController();
   @override
   void initState() {
@@ -33,6 +36,8 @@ class _FlashCardItemState extends State<FlashCardItem> {
     if (event is KeyDownEvent) {
       if (key == LogicalKeyboardKey.arrowLeft.keyLabel || key == LogicalKeyboardKey.arrowRight.keyLabel) {
         widget.doFlip.call(controller);
+      }else if(key == LogicalKeyboardKey.space.keyLabel && widget.currentWord.value == widget.word){
+        flutterTts.speak("${widget.word.english}");
       }
     }
     return false;
@@ -51,6 +56,7 @@ class _FlashCardItemState extends State<FlashCardItem> {
             children: [
               Text("${widget.word.english}",style: const TextStyle(fontSize: 20),),
               Text("${widget.word.phonetics}",style: const TextStyle(fontSize: 20),),
+              TTSWidget(text: '${widget.word.english}',),
             ],
           ), back: _createWordInfo(widget.word),
         ),
