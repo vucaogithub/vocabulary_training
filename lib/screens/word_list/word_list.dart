@@ -116,6 +116,7 @@ class _WordListState extends State<WordList> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
+                _buildRowContent(title: "type", content: item.wordType),
                 _buildRowContent(title: "Phonetics", content: item.phonetics),
                 _buildRowContent(title: "Vietnamese", content: item.vietnamese),
                 _buildRowContent(title: "Meaning", content: item.meaning),

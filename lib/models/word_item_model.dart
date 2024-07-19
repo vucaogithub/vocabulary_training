@@ -4,6 +4,7 @@ class WordItemModel extends Equatable {
   final int? id;
   final String? topic;
   final String? english;
+  final String? wordType;
   final String? phonetics;
   final String? vietnamese;
   final String? meaning;
@@ -17,6 +18,7 @@ class WordItemModel extends Equatable {
     this.id,
     this.topic,
     this.english,
+    this.wordType,
     this.phonetics,
     this.vietnamese,
     this.meaning,
@@ -30,6 +32,7 @@ class WordItemModel extends Equatable {
         id: json["id"],
         topic: json["topic"],
         english: json["english"],
+        wordType: json["word_type"],
         phonetics: json["phonetics"],
         vietnamese: json["vietnamese"],
         meaning: json["meaning"],
@@ -43,6 +46,7 @@ class WordItemModel extends Equatable {
         "id": id,
         "topic": topic,
         "english": english,
+        "word_type": wordType,
         "phonetics": phonetics,
         "vietnamese": vietnamese,
         "meaning": meaning,
@@ -57,6 +61,7 @@ class WordItemModel extends Equatable {
         id,
         topic,
         english,
+        wordType,
         phonetics,
         vietnamese,
         meaning,

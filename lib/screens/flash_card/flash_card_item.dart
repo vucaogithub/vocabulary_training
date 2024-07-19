@@ -54,7 +54,8 @@ class _FlashCardItemState extends State<FlashCardItem> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text("${widget.word.english}",style: const TextStyle(fontSize: 20),),
+              Text("${widget.word.english}",style: const TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
+              Text("${widget.word.wordType}",style: const TextStyle(fontSize: 16,fontStyle: FontStyle.italic),),
               Text("${widget.word.phonetics}",style: const TextStyle(fontSize: 20),),
               TTSWidget(text: '${widget.word.english}',),
             ],
