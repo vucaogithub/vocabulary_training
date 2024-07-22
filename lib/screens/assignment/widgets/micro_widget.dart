@@ -67,7 +67,7 @@ class _MicroWidgetState extends State<MicroWidget> {
   @override
   void dispose() {
     super.dispose();
-    ServicesBinding.instance.keyboard.addHandler(_onKey);
+    ServicesBinding.instance.keyboard.removeHandler(_onKey);
   }
 
   @override

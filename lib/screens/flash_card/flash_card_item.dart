@@ -31,6 +31,12 @@ class _FlashCardItemState extends State<FlashCardItem> {
     ServicesBinding.instance.keyboard.addHandler(_onKey);
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    ServicesBinding.instance.keyboard.removeHandler(_onKey);
+  }
+
   bool _onKey(KeyEvent event) {
     final key = event.logicalKey.keyLabel;
     if (event is KeyDownEvent) {

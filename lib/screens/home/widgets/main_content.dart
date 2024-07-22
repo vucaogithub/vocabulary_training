@@ -59,8 +59,8 @@ class MainContent extends StatelessWidget {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) =>
-                                MultiBlocProvider(
+                            builder: (context) {
+                              return MultiBlocProvider(
                                   providers: [
                                     BlocProvider.value(
                                       value: vocabularyCubit,
@@ -69,7 +69,8 @@ class MainContent extends StatelessWidget {
                                   child: WordList(
                                       list: topic.words,
                                       onRefresh: onRefresh),
-                                )));
+                                );
+                            }));
                   },
                 ),
                 WordList(

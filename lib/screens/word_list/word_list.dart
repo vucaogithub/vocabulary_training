@@ -22,7 +22,13 @@ class WordList extends StatefulWidget {
 
 class _WordListState extends State<WordList> {
   late final vocabularyCubit = context.read<VocabularyCubit>();
-  bool isSelectAll = false;
+  late bool isSelectAll = _isAllSelected();
+
+  @override
+  void initState() {
+    super.initState();
+    _selectAll(true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,9 +55,7 @@ class _WordListState extends State<WordList> {
                     onChanged: (enable) {
                       setState(() {
                         isSelectAll = enable;
-                        for (int i = 0; i < widget.list.length; i++) {
-                          widget.list.elementAt(i).isSelected = enable;
-                        }
+                        _selectAll(enable);
                       });
                     }),
                 title: const Text("Select all words"),
@@ -95,6 +99,16 @@ class _WordListState extends State<WordList> {
         ),
       ),
     );
+  }
+
+  void _selectAll(bool enable) {
+    for (int i = 0; i < widget.list.length; i++) {
+      widget.list.elementAt(i).isSelected = enable;
+    }
+  }
+
+  bool _isAllSelected() {
+    return widget.list.where((element) => element.isSelected != true).isNotEmpty == false;
   }
 
   void showDataPopup(BuildContext context, WordItemModel item) {
