@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:vocabulary_training/models/assignment_model.dart';
 import 'package:vocabulary_training/models/word_item_model.dart';
@@ -28,6 +29,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
   final isUSingMicro = ValueNotifier(false);
   final answerCorrect = ValueNotifier(false);
   final SpeechToText _speechToText = SpeechToText();
+  final flutterTts = FlutterTts();
 
   @override
   void initState() {
@@ -52,17 +54,19 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
 
   bool _onKey(KeyEvent event) {
     final key = event.logicalKey.keyLabel;
+    final fistItem = assignmentModel.firstOrNull;
     if (event is KeyDownEvent) {
-      final fistItem = assignmentModel.firstOrNull;
       if (isUSingMicro.value != true) {
         if (!node.hasFocus) {
           FocusScope.of(context).requestFocus(node);
         }
         if (key == LogicalKeyboardKey.arrowUp.keyLabel) {
           _showAnswer(context);
+        } else if (key == LogicalKeyboardKey.arrowDown.keyLabel) {
+          flutterTts.speak("${fistItem?.english}");
         } else if (key == LogicalKeyboardKey.enter.keyLabel) {
           if (fistItem == null && assignmentModel.wordRemaining <= 0) {
-            _reset(context,widget.words);
+            _reset(context, widget.words);
           }
         } else if (key == LogicalKeyboardKey.escape.keyLabel) {
           _skipWord();
@@ -70,6 +74,8 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
       } else {
         if (key == LogicalKeyboardKey.arrowUp.keyLabel) {
           _showAnswer(context);
+        } else if (key == LogicalKeyboardKey.arrowDown.keyLabel) {
+          flutterTts.speak("${fistItem?.english}");
         }
       }
     } else if (event is KeyRepeatEvent) {
@@ -146,7 +152,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                     if (isCompleted) {
                       return AssignmentComplete(
                         assignmentModel: assignmentModel,
-                        onTryAgainPressed: (){
+                        onTryAgainPressed: () {
                           _reset(context, widget.words);
                         },
                         onRetest: (List<AssignmentItem> list) {
@@ -172,7 +178,15 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                           "${fistItem?.vietnamese}",
                           textAlign: TextAlign.center,
                           style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w500),
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          "(${fistItem?.wordType})",
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              fontStyle: FontStyle.italic),
                         ),
                         ValueListenableBuilder(
                             valueListenable: showAnswer,
@@ -182,10 +196,15 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      SelectableText("${fistItem?.english}",style: const TextStyle(fontWeight: FontWeight.bold),),
+                                      SelectableText(
+                                        "${fistItem?.english}",
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
                                       SelectableText("${fistItem?.phonetics}"),
                                       TTSWidget(
                                         text: fistItem?.english,
+                                        flutterTts: flutterTts,
                                       )
                                     ],
                                   ));
@@ -229,8 +248,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                               width: 12,
                             ),
                             _buildElevatedButton(
-                                onPressed: _skipWord,
-                                title: "Skip"),
+                                onPressed: _skipWord, title: "Skip"),
                             const SizedBox(
                               width: 12,
                             ),
@@ -318,7 +336,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
     });
   }
 
-  void _reset(BuildContext context,List<AssignmentItem> items) {
+  void _reset(BuildContext context, List<AssignmentItem> items) {
     Navigator.pop(context);
     final newList = items.map((e) {
       e.reset();
@@ -327,8 +345,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) =>
-                AssignmentScreen(words: newList)));
+            builder: (context) => AssignmentScreen(words: newList)));
   }
 
   Future<void> showInfoDialog(BuildContext context) async {
@@ -341,7 +358,8 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
           content: const SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('- Press Up Arrow to show answer'),
+                Text('- Press Up Arrow key to show answer'),
+                Text('- Press Down Arrow key to speak answer'),
                 Text('- Hold Space Key to open microphone'),
                 Text('- Press Escape to skip question'),
               ],
