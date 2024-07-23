@@ -330,6 +330,7 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
     await Future.delayed(const Duration(milliseconds: 100));
     setState(() {
       final item = assignmentModel.firstOrNull;
+      flutterTts.speak("${item?.english}");
       item?.isDone = true;
       showAnswer.value = false;
       answerCorrect.value = false;
